@@ -137,7 +137,7 @@ internal class DevConnectionCloudpebbleProxy(
                                     }
                                     ClientMessageType.InstallBundle -> {
                                         logger.d { "Received InstallBundle message with payload size ${payload.size}" }
-                                        send(InstallStatusMessage(installPBW(payload)))
+                                        send(InstallStatusMessage(installPBW(identifier, payload)))
                                     }
                                     ClientMessageType.InstallFirmware -> {
                                         logger.d { "Received InstallFirmware message with payload size ${payload.size}" }

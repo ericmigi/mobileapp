@@ -1,9 +1,6 @@
 package io.rebble.libpebblecommon.connection.bt.ble.pebble
 
-import com.oldguy.common.io.BitSet
-import com.oldguy.common.io.Buffer
-import com.oldguy.common.io.ByteBuffer
-import io.rebble.libpebblecommon.connection.bt.ble.pebble.ExtendedPebbleScanRecord.Companion.decodeExtendedPebbleScanRecord
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform
 
 public data class PebbleLeScanRecord internal constructor(
     val payloadType: Byte,
@@ -11,12 +8,33 @@ public data class PebbleLeScanRecord internal constructor(
     val extendedInfo: ExtendedPebbleScanRecord?,
 ) {
     public companion object {
+        private const val SERIAL_END = 13
+        private const val EXTENDED_END = SERIAL_END + 6
+
         internal fun ByteArray.decodePebbleScanRecord(): PebbleLeScanRecord {
-            val buffer = ByteBuffer(this, Buffer.ByteOrder.LittleEndian)
+            require(size >= SERIAL_END) { "Truncated Pebble scan record" }
             return PebbleLeScanRecord(
-                payloadType = buffer.byte,
-                serialNumber = buffer.getBytes(12).decodeToString(),
-                extendedInfo = buffer.decodeExtendedPebbleScanRecord(),
+                payloadType = this[0],
+                serialNumber = decodeToString(1, SERIAL_END),
+                extendedInfo = if (size >= EXTENDED_END) decodeExtendedInfo() else null,
+            )
+        }
+
+        private fun ByteArray.decodeExtendedInfo(): ExtendedPebbleScanRecord {
+            val hardware = this[SERIAL_END].toUByte().toInt()
+            val flags = this[SERIAL_END + 5].toInt()
+            val pro = WatchHardwarePlatform.XTEINK_X4_PRO
+            return ExtendedPebbleScanRecord(
+                hardwarePlatform = hardware,
+                color = this[SERIAL_END + 1],
+                major = this[SERIAL_END + 2].toUByte().toInt(),
+                minor = this[SERIAL_END + 3].toUByte().toInt(),
+                patch = this[SERIAL_END + 4].toUByte().toInt(),
+                runningPrf = flags and 1 != 0,
+                firstUse = flags and 2 != 0,
+                advertisedBoard = if (hardware == pro.protocolNumber.toInt() &&
+                    decodeToString(EXTENDED_END, size) == pro.revision
+                ) pro else null,
             )
         }
     }
@@ -30,31 +48,5 @@ public data class ExtendedPebbleScanRecord internal constructor(
     val patch: Int,
     val runningPrf: Boolean,
     val firstUse: Boolean,
-) {
-    public companion object {
-        internal fun ByteBuffer.decodeExtendedPebbleScanRecord(): ExtendedPebbleScanRecord? {
-            val buffer = this
-            // Only added in v3.0
-            if (!buffer.hasRemaining) {
-                return null
-            }
-            val hardwarePlatform = buffer.byte.toInt()
-            val color = buffer.byte
-            val major = buffer.byte.toUByte().toInt()
-            val minor = buffer.byte.toUByte().toInt()
-            val patch = buffer.byte.toUByte().toInt()
-            val flags = BitSet(buffer.getBytes(1))
-            val runningPrf = flags[0]
-            val firstUse = flags[1]
-            return ExtendedPebbleScanRecord(
-                hardwarePlatform = hardwarePlatform,
-                color = color,
-                major = major,
-                minor = minor,
-                patch = patch,
-                runningPrf = runningPrf,
-                firstUse = firstUse,
-            )
-        }
-    }
-}
+    val advertisedBoard: WatchHardwarePlatform? = null,
+)

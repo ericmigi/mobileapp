@@ -56,6 +56,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
 
+internal val WatchType.storeCodename: String
+    get() = if (this == WatchType.X4_PRO) WatchType.FLINT.codename else codename
+
 class AppstoreService(
     private val platform: Platform,
     httpClient: HttpClient,
@@ -101,7 +104,7 @@ class AppstoreService(
     private fun cacheParamsForApp(hardwarePlatform: WatchType?): Map<String, String> =
         buildMap {
             put("platform", platform.storeString())
-            hardwarePlatform?.let { put("hardware", it.codename) }
+            hardwarePlatform?.let { put("hardware", it.storeCodename) }
         }
 
     private companion object {
@@ -330,7 +333,7 @@ class AppstoreService(
         val httpParameters = buildMap {
             put("platform", platform.storeString())
             if (hardwarePlatform != null) {
-                put("hardware", hardwarePlatform.codename)
+                put("hardware", hardwarePlatform.storeCodename)
             }
             //            "firmware_version" to "",
             //            "filter_hardware" to "true",
@@ -363,7 +366,7 @@ class AppstoreService(
         val parameters = buildMap {
             set("platform", platform.storeString())
             if (hardwarePlatform != null) {
-                set("hardware", hardwarePlatform.codename)
+                set("hardware", hardwarePlatform.storeCodename)
             }
 //            set("firmware_version", "")
             set("filter_hardware", "true")
@@ -464,7 +467,7 @@ class AppstoreService(
         val apps = try {
             httpClient.get(url = Url("${source.url}/v1/apps/collection/$PLUGIN_DATA_APPS_SLUG/${type.storeString()}")) {
                 parameter("platform", platform.storeString())
-                hardwarePlatform?.let { parameter("hardware", it.codename) }
+                hardwarePlatform?.let { parameter("hardware", it.storeCodename) }
                 parameter("limit", HEARTED_HOME_PREVIEW_LIMIT)
             }.takeIf { it.status.isSuccess() }?.body<StoreAppResponse>()?.data
         } catch (e: CancellationException) {
@@ -549,7 +552,7 @@ class AppstoreService(
                 val offset = params.key ?: 0
                  val parameters = buildMap {
                     put("platform", platform.storeString())
-                    put("hardware", hardwarePlatform.codename)
+                    put("hardware", hardwarePlatform.storeCodename)
                     put("offset", offset.toString())
                     put("limit", params.loadSize)
                     putAll(extraParameters)

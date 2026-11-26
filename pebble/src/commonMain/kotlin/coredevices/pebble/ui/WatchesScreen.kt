@@ -315,6 +315,7 @@ import io.rebble.libpebblecommon.timeline.toPebbleColor
 import io.rebble.libpebblecommon.util.getTempFilePath
 import io.rebble.libpebblecommon.metadata.WatchColor
 import io.rebble.libpebblecommon.metadata.WatchType
+import io.rebble.libpebblecommon.connection.modelDescription
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -855,9 +856,9 @@ private fun DiscoveredWatchesDialog(
                             Spacer(Modifier.width(16.dp))
                             Column {
                                 Text(watch.displayName(), style = MaterialTheme.typography.bodyLarge)
-                                watch.color()?.let {
+                                watch.modelDescription()?.let {
                                     Text(
-                                        it.uiDescription,
+                                        it,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -2279,7 +2280,7 @@ fun WatchDetails(
         )
     }
     val watchColorText = remember(watch) {
-        watch.color()?.uiDescription
+        watch.modelDescription()
     }
     FlowRow(verticalArrangement = Arrangement.Center) {
         if (watch is ConnectedPebble.DevConnection) {

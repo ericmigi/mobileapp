@@ -197,6 +197,8 @@ public class FakeLibPebble : LibPebble {
         return true
     }
 
+    override suspend fun sideloadAppToWatch(pbwPath: Path, identifier: PebbleIdentifier): Boolean = true
+
     override fun getAllLockerBasicInfo(): Flow<List<AppBasicProperties>> {
         return flow { emit(emptyList()) }
     }

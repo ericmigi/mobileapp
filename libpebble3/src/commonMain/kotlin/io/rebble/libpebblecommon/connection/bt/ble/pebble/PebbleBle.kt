@@ -256,7 +256,7 @@ internal fun WatchHardwarePlatform?.advertisesWhenNotConnected(): Boolean = when
     WatchType.CHALK -> true
     WatchType.DIORITE -> true
     WatchType.EMERY -> false
-    WatchType.FLINT -> false
+    WatchType.FLINT, WatchType.X4_PRO -> false
     WatchType.GABBRO -> false
     null -> false
 }

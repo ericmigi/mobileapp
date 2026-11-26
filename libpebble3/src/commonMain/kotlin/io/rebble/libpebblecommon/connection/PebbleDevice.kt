@@ -11,6 +11,7 @@ import io.rebble.libpebblecommon.connection.endpointmanager.musiccontrol.MusicTr
 import io.rebble.libpebblecommon.image.PebbleBitmap
 import io.rebble.libpebblecommon.js.PKJSApp
 import io.rebble.libpebblecommon.metadata.WatchColor
+import io.rebble.libpebblecommon.metadata.modelDescription
 import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform
 import io.rebble.libpebblecommon.music.MusicAction
 import io.rebble.libpebblecommon.music.PlaybackState
@@ -270,6 +271,14 @@ public object ConnectedPebble {
         internal val devConnection: DevConnection
     )
 }
+
+public fun PebbleDevice.modelDescription(): String? = color().modelDescription(
+    when (this) {
+        is KnownPebbleDevice -> watchType
+        is BleDiscoveredPebbleDevice -> pebbleScanRecord.extendedInfo?.advertisedBoard
+        else -> null
+    }
+)
 
 public fun PebbleDevice.color(): WatchColor? = when (this) {
     is KnownPebbleDevice -> color

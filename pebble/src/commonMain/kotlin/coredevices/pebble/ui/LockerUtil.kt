@@ -392,6 +392,7 @@ fun WatchType.modelDescription() = when (this) {
     WatchType.CHALK -> "Pebble Time Round"
     WatchType.DIORITE -> "Pebble 2"
     WatchType.EMERY -> "Pebble Time 2"
+    WatchType.X4_PRO -> "Xteink X4 Pro"
     WatchType.FLINT -> "Pebble 2 Duo"
     WatchType.GABBRO -> "Pebble Round 2"
 }
@@ -571,6 +572,7 @@ fun WatchType.shortName(): String = when (this) {
     WatchType.BASALT -> "PT"
     WatchType.CHALK -> "PTR"
     WatchType.DIORITE -> "P2"
+    WatchType.X4_PRO -> "X4 Pro"
     WatchType.FLINT -> "P2D"
     WatchType.EMERY -> "PT2"
     WatchType.GABBRO -> "PR2"
@@ -591,6 +593,17 @@ fun StoreApplication.asCommonApp(
         logger.w { "StoreApplication.asCommonApp() missing latestRelease" }
         return null
     }
+    val proPlatform = if (watchType == WatchType.X4_PRO) {
+        val platforms = hardwarePlatforms.orEmpty()
+        val variant = watchType.getBestVariant(platforms.map { it.name })
+        platforms.firstOrNull { it.name == variant?.codename }
+    } else null
+    val platformScreenshot = proPlatform?.images?.get("screenshot")?.takeIf { it.isNotEmpty() }
+    val screenshots = if (platformScreenshot != null && proPlatform?.name != screenshotHardware) {
+        listOf(platformScreenshot)
+    } else {
+        screenshotImages.mapNotNull { it.values.firstOrNull() }
+    }
     return CommonApp(
         title = title,
         developerName = author,
@@ -600,7 +613,7 @@ fun StoreApplication.asCommonApp(
             storeSource = source,
             storeApp = this,
             headerImageUrl = headerImage,
-            allScreenshotUrls = screenshotImages.mapNotNull { it.values.firstOrNull() },
+            allScreenshotUrls = screenshots,
             addHeartUrl = links.addHeart,
             removeHeartUrl = links.removeHeart,
             publishedDate = latestRelease.publishedDate ?: publishedDate,
@@ -612,10 +625,10 @@ fun StoreApplication.asCommonApp(
         type = appType,
         category = category,
         version = latestRelease.version,
-        listImageUrl = listImage.values.firstOrNull(),
+        listImageUrl = proPlatform?.images?.get("list")?.takeIf { it.isNotEmpty() } ?: listImage.values.firstOrNull(),
         listImageTintable = iconTintable,
-        screenshotImageUrl = screenshotImages.firstOrNull()?.values?.firstOrNull(),
-        isCompatible = appType == AppType.Plugin || compatibility.isCompatible(watchType, platform),
+        screenshotImageUrl = platformScreenshot ?: screenshots.firstOrNull(),
+        isCompatible = appType == AppType.Plugin || compatibility.isCompatible(watchType, platform, hardwarePlatforms.orEmpty().map { it.name }),
         hearts = hearts,
         description = description,
         isNativelyCompatible = when {
@@ -1143,7 +1156,11 @@ enum class WatchfaceFilterMode(
     }
 }
 
-fun LockerEntryCompatibility.isCompatible(watchType: WatchType, platform: Platform): Boolean {
+fun LockerEntryCompatibility.isCompatible(
+    watchType: WatchType,
+    platform: Platform,
+    binaryPlatforms: List<String> = emptyList(),
+): Boolean {
     if (platform == Platform.IOS && !ios.supported) return false
     if (platform == Platform.Android && !android.supported) return false
     val appVariants = buildSet {
@@ -1153,6 +1170,7 @@ fun LockerEntryCompatibility.isCompatible(watchType: WatchType, platform: Platfo
         if (diorite.supported) add(WatchType.DIORITE)
         if (emery.supported) add(WatchType.EMERY)
         if (flint?.supported == true) add(WatchType.FLINT)
+        if (xteinkx4pro?.supported ?: (WatchType.X4_PRO.codename in binaryPlatforms)) add(WatchType.X4_PRO)
         if (gabbro?.supported == true) add(WatchType.GABBRO)
     }
     return watchType.getCompatibleAppVariants().intersect(appVariants).isNotEmpty()
@@ -1165,6 +1183,7 @@ fun LockerEntryCompatibility.findPlatform(watchType: WatchType): LockerEntryComp
         WatchType.CHALK -> chalk
         WatchType.DIORITE -> diorite
         WatchType.EMERY -> emery
+        WatchType.X4_PRO -> xteinkx4pro
         WatchType.FLINT -> flint
         WatchType.GABBRO -> gabbro
     }

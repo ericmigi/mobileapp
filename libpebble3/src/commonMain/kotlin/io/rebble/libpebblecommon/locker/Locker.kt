@@ -32,6 +32,7 @@ import io.rebble.libpebblecommon.database.entity.LockerEntryAppstoreData
 import io.rebble.libpebblecommon.database.entity.LockerEntryPlatform
 import io.rebble.libpebblecommon.di.LibPebbleCoroutineScope
 import io.rebble.libpebblecommon.disk.pbw.PbwApp
+import io.rebble.libpebblecommon.disk.pbw.bestVariantFor
 import io.rebble.libpebblecommon.disk.pbw.encodedPluginManifest
 import io.rebble.libpebblecommon.disk.pbw.hasWatchappBuild
 import io.rebble.libpebblecommon.disk.pbw.toLockerEntry
@@ -57,6 +58,7 @@ import io.rebble.libpebblecommon.web.WebSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
@@ -64,7 +66,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -143,8 +144,16 @@ internal class Locker internal constructor(
     }
 
     override suspend fun sideloadApp(pbwPath: Path, loadOnWatch: Boolean, granted: Map<String, Boolean?>): Boolean =
+        readAndSideload(pbwPath, loadOnWatch, granted, null)
+
+    override suspend fun sideloadAppToWatch(pbwPath: Path, identifier: PebbleIdentifier): Boolean =
+        readAndSideload(pbwPath, true, emptyMap(), identifier)
+
+    private suspend fun readAndSideload(
+        pbwPath: Path, loadOnWatch: Boolean, granted: Map<String, Boolean?>, target: PebbleIdentifier?,
+    ): Boolean =
         try {
-            sideloadApp(pbwApp = PbwApp(pbwPath), loadOnWatch = loadOnWatch, granted = granted)
+            sideloadApp(PbwApp(pbwPath), loadOnWatch, granted, target)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -490,13 +499,23 @@ internal class Locker internal constructor(
      * @param pbwApp The app to sideload.
      * @param loadOnWatch Whether to fully install the app on the watch (launch it). Defaults to true.
      */
-    internal suspend fun sideloadApp(pbwApp: PbwApp, loadOnWatch: Boolean, granted: Map<String, Boolean?> = emptyMap()): Boolean {
+    internal suspend fun sideloadApp(
+        pbwApp: PbwApp, loadOnWatch: Boolean, granted: Map<String, Boolean?> = emptyMap(),
+        target: PebbleIdentifier? = null,
+    ): Boolean {
         logger.d { "Sideloading app ${pbwApp.info.longName}" }
         val type = when {
             pbwApp.info.loadablePlugin != null && !pbwApp.hasWatchappBuild() -> AppType.Plugin
             pbwApp.info.watchapp.watchface -> AppType.Watchface
             else -> AppType.Watchapp
         }
+        val watches = if (loadOnWatch) {
+            watchManager.watches.first().filterIsInstance<ConnectedPebbleDevice>().filter {
+                (target == null || it.identifier == target) &&
+                    (type == AppType.Plugin || pbwApp.bestVariantFor(it.watchType.watchType) != null)
+            }
+        } else emptyList()
+        if (target != null && watches.isEmpty()) return false
         val lockerEntry = pbwApp.toLockerEntry(clock.now(), orderIndexForInsert(type)).let { new ->
             // A permissions-only change doesn't make the watch reload the binary
             new.copy(watchPermissions = lockerEntryDao.getEntry(new.id)?.watchPermissions ?: 0)
@@ -505,23 +524,6 @@ internal class Locker internal constructor(
         pbwApp.source().buffered().use {
             lockerPBWCache.addPBWFileForApp(lockerEntry.id, pbwApp.info.versionLabel, it)
         }
-        // A plugin-only pbw never reaches the watch.
-        val tasks = if (loadOnWatch && type != AppType.Plugin) {
-            watchManager.watches.first().filterIsInstance<ConnectedPebbleDevice>().map {
-                libPebbleCoroutineScope.async {
-                    val entryStatus = lockerEntryDao.existsOnWatch(
-                        it.identifier.asString,
-                        lockerEntry.id
-                    ).drop(1).first()
-                    if (entryStatus) {
-                        logger.d { "App synced, launching" }
-                        it.launchApp(lockerEntry.id)
-                    }
-                }
-            }
-        } else {
-            null
-        }
         lockerEntryDao.insertOrReplaceAndOrder(lockerEntry, config.value.lockerSyncLimitV2)
         // After the insert: requests are only shown for installed apps.
         permissions.recordRequested(lockerEntry.id, pbwApp.requestedPermissions())
@@ -529,8 +531,19 @@ internal class Locker internal constructor(
         performCacheCleanup()
         return try {
             withTimeout(40.seconds) {
-                tasks?.awaitAll()
-                true
+                if (type == AppType.Plugin) return@withTimeout true
+                coroutineScope {
+                    watches.map { watch ->
+                        async {
+                            if (!waitUntilAppSyncedToWatch(lockerEntry.id, watch.identifier, 40.seconds)) {
+                                return@async false
+                            }
+                            lockerEntryDao.existsOnWatch(watch.identifier.asString, lockerEntry.id).first { it }
+                            watch.launchApp(lockerEntry.id)
+                            true
+                        }
+                    }.awaitAll().all { it }
+                }
             }
         } catch (e: TimeoutCancellationException) {
             logger.w { "Timeout while waiting for app to sync+launch on watches" }

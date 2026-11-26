@@ -52,9 +52,9 @@ public abstract class DevConnectionTransport internal constructor(
         return path
     }
 
-    protected suspend fun installPBW(payload: ByteArray): Boolean {
+    protected suspend fun installPBW(identifier: PebbleIdentifier, payload: ByteArray): Boolean {
         try {
-            return libPebble.sideloadApp(writeTempFile(payload, "pbw"))
+            return libPebble.sideloadAppToWatch(writeTempFile(payload, "pbw"), identifier)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

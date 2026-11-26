@@ -697,6 +697,7 @@ data class StoreOnboarding(
     val emery: List<String> = emptyList(),
     val flint: List<String> = emptyList(),
     val gabbro: List<String> = emptyList(),
+    val xteinkx4pro: List<String> = emptyList(),
 )
 
 @Serializable
@@ -1098,6 +1099,11 @@ fun StoreApplication.toLockerEntry(sourceUrl: String, timelineToken: String?): L
             app.compatibility.flint.takeIf { it?.supported ?: false }?.let {
                 val fallbackFlagsFinal = fallbackFlags or (0x6 shl 6)
                 app.asLockerEntryPlatform("flint", fallbackFlagsFinal)?.let { add(it) }
+            }
+            val native = WatchType.X4_PRO.codename
+            if (app.compatibility.xteinkx4pro?.supported ?: app.hardwarePlatforms.orEmpty().any { it.name == native }) {
+                // The native SDK encodes a named extension platform with PROCESS_INFO_PLATFORM_OTHER.
+                app.asLockerEntryPlatform(native, fallbackFlags or (0xf shl 6))?.let { add(it) }
             }
             app.compatibility.gabbro.takeIf { it?.supported ?: false }?.let {
                 val fallbackFlagsFinal = fallbackFlags or (0x6 shl 7)

@@ -35,6 +35,8 @@ public enum class WatchHardwarePlatform(public val protocolNumber: UByte, privat
     PEBBLE_SILK_EVT(12u, WatchType.DIORITE, "silk_evt"),
     PEBBLE_SILK(14u, WatchType.DIORITE, "silk"),
     CORE_ASTERIX(15u, WatchType.FLINT, "asterix"),
+    // The Pro advertises the Flint transport profile and identifies itself in the board field.
+    XTEINK_X4_PRO(15u, WatchType.X4_PRO, "x4pro"),
     CORE_OBELIX_EVT(16u, WatchType.EMERY, "obelix_evt"),
     CORE_OBELIX_DVT(17u, WatchType.EMERY, "obelix_dvt"),
     CORE_OBELIX_PVT(18u, WatchType.EMERY, "obelix_pvt"),

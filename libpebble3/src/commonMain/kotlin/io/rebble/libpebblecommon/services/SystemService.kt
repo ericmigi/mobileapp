@@ -396,6 +396,9 @@ internal fun WatchVersionResponse.watchInfo(color: WatchColor): WatchInfo {
     val platform =
         WatchHardwarePlatform.fromProtocolNumber(running.hardwarePlatform.get()).let { platform ->
             when {
+                platform == WatchHardwarePlatform.CORE_ASTERIX && board.get() == "x4pro" ->
+                    WatchHardwarePlatform.XTEINK_X4_PRO
+
                 // Hack: Obelix PVT reports platform code 0
                 running.hardwarePlatform.get() == 0u.toUByte() &&
                         serial.get().startsWith("C111") &&

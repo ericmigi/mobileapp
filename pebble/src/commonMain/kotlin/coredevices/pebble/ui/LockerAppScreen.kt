@@ -860,8 +860,11 @@ fun LockerAppScreen(topBarParams: TopBarParams, uuid: Uuid?, navBarNav: NavBarNa
                         )
                     }
                     commonAppStore?.storeApp?.batteryImpact?.takeIf { it.isNotEmpty() }?.let { impacts ->
-                        val connected = sharedViewModel.watchType.value.codename
-                        val platform = if (connected in impacts) connected else impacts.keys.first()
+                        val watchType = sharedViewModel.watchType.value
+                        val connected = watchType.codename
+                        val platform = if (watchType == WatchType.X4_PRO) {
+                            watchType.getBestVariant(impacts.keys.toList())?.codename ?: impacts.keys.first()
+                        } else if (connected in impacts) connected else impacts.keys.first()
                         var showDetails by remember { mutableStateOf(false) }
                         val otherWatchText = if (platform != connected) " (${batteryImpactWatchName(platform, short = true)})" else ""
                         PropertyRow(

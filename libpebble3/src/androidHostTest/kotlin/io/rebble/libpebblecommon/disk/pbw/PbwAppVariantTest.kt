@@ -6,6 +6,9 @@ import kotlinx.io.files.Path
 import org.junit.Test
 import java.io.File
 import java.io.FileOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -113,6 +116,36 @@ class PbwAppVariantTest {
         val app = PbwApp(loadPbw("variant_root_and_chalk.pbw"))
         assertNotNull(app.getTextFile("appinfo.json"))
         assertNull(app.getTextFile("no-such-config.html"))
+    }
+
+    @Test
+    fun proPrefersShippedNativeBuildAndFallsBackToFlint() {
+        val fixture = File(loadPbw("variant_chalk_only.pbw").toString())
+        fun appWith(vararg platforms: String): PbwApp {
+            val archive = File.createTempFile("pro-variants", ".pbw").apply { deleteOnExit() }
+            ZipFile(fixture).use { source ->
+                ZipOutputStream(archive.outputStream()).use { target ->
+                    for (entry in source.entries()) {
+                        val names = if (entry.name.startsWith("chalk/")) {
+                            platforms.map { "$it/${entry.name.substringAfter('/')}" }
+                        } else listOf(entry.name)
+                        for (name in names) {
+                            target.putNextEntry(ZipEntry(name))
+                            source.getInputStream(entry).use { it.copyTo(target) }
+                            target.closeEntry()
+                        }
+                    }
+                }
+            }
+            return PbwApp(Path(archive.absolutePath))
+        }
+        val nativeOnly = appWith("xteinkx4pro")
+        assertNull(nativeOnly.bestVariantFor(WatchType.FLINT))
+        assertEquals(WatchType.X4_PRO, nativeOnly.bestVariantFor(WatchType.X4_PRO))
+        assertEquals(WatchType.FLINT, appWith("flint").bestVariantFor(WatchType.X4_PRO))
+        val mixed = appWith("flint", "xteinkx4pro")
+        assertEquals(WatchType.X4_PRO, mixed.bestVariantFor(WatchType.X4_PRO))
+        assertEquals(WatchType.FLINT, mixed.bestVariantFor(WatchType.FLINT))
     }
 
     private fun loadPbw(resourceName: String): Path {

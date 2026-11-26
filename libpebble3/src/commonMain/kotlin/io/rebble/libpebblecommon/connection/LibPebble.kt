@@ -425,6 +425,8 @@ public interface LockerApi {
      * [granted]: the answers to [reviewSideload].
      */
     public suspend fun sideloadApp(pbwPath: Path, loadOnWatch: Boolean = true, granted: Map<String, Boolean?> = emptyMap()): Boolean
+    /** Install a developer upload for the watch selected by its connection. */
+    public suspend fun sideloadAppToWatch(pbwPath: Path, identifier: PebbleIdentifier): Boolean
     /** Null if there's nothing to ask, or the pbw can't be read. */
     public suspend fun reviewSideload(pbwPath: Path): InstallReview?
     public suspend fun reviewInstall(appUuid: Uuid, appName: String, requested: RequestedPermissions): InstallReview?
