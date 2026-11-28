@@ -1,6 +1,8 @@
 package io.rebble.libpebblecommon.disk.pbw
 
 import io.rebble.libpebblecommon.database.entity.asMetadata
+import io.rebble.libpebblecommon.metadata.DeviceProfile
+import io.rebble.libpebblecommon.metadata.DeviceProfiles
 import io.rebble.libpebblecommon.metadata.WatchType
 import kotlinx.io.files.Path
 import org.junit.Test
@@ -120,25 +122,6 @@ class PbwAppVariantTest {
 
     @Test
     fun proPrefersShippedNativeBuildAndFallsBackToFlint() {
-        val fixture = File(loadPbw("variant_chalk_only.pbw").toString())
-        fun appWith(vararg platforms: String): PbwApp {
-            val archive = File.createTempFile("pro-variants", ".pbw").apply { deleteOnExit() }
-            ZipFile(fixture).use { source ->
-                ZipOutputStream(archive.outputStream()).use { target ->
-                    for (entry in source.entries()) {
-                        val names = if (entry.name.startsWith("chalk/")) {
-                            platforms.map { "$it/${entry.name.substringAfter('/')}" }
-                        } else listOf(entry.name)
-                        for (name in names) {
-                            target.putNextEntry(ZipEntry(name))
-                            source.getInputStream(entry).use { it.copyTo(target) }
-                            target.closeEntry()
-                        }
-                    }
-                }
-            }
-            return PbwApp(Path(archive.absolutePath))
-        }
         val nativeOnly = appWith("xteinkx4pro")
         assertNull(nativeOnly.bestVariantFor(WatchType.FLINT))
         assertEquals(WatchType.X4_PRO, nativeOnly.bestVariantFor(WatchType.X4_PRO))
@@ -146,6 +129,46 @@ class PbwAppVariantTest {
         val mixed = appWith("flint", "xteinkx4pro")
         assertEquals(WatchType.X4_PRO, mixed.bestVariantFor(WatchType.X4_PRO))
         assertEquals(WatchType.FLINT, mixed.bestVariantFor(WatchType.FLINT))
+    }
+
+    @Test
+    fun twoImportedBoardsSelectTheirOwnBinariesAndLockerEntries() {
+        val first = DeviceProfile(1, "Reader A", "alpha", 15, "reader_a")
+        val second = DeviceProfile(1, "Reader B", "beta", 15, "reader_b", listOf("flint"), "flint")
+        val previous = DeviceProfiles.current
+        try {
+            DeviceProfiles.load(second.addedTo(first.addedTo(previous)))
+            val archive = appWith("reader_b", "flint", "reader_a")
+            assertEquals(first.type, archive.bestVariantFor(first.type))
+            assertEquals(second.type, archive.bestVariantFor(second.type))
+            assertEquals(WatchType.FLINT, appWith("flint").bestVariantFor(second.type))
+            assertNull(appWith("flint", "reader_b").bestVariantFor(first.type))
+            val locker = archive.toLockerEntry(Instant.fromEpochSeconds(0), 0)
+            assertEquals(setOf("reader_a", "reader_b", "flint"), locker.platforms.map { it.name }.toSet())
+        } finally {
+            DeviceProfiles.load(previous)
+        }
+    }
+
+    private fun appWith(vararg platforms: String): PbwApp {
+        val fixture = File(loadPbw("variant_chalk_only.pbw").toString())
+
+        val archive = File.createTempFile("pro-variants", ".pbw").apply { deleteOnExit() }
+        ZipFile(fixture).use { source ->
+            ZipOutputStream(archive.outputStream()).use { target ->
+                for (entry in source.entries()) {
+                    val names = if (entry.name.startsWith("chalk/")) {
+                        platforms.map { "$it/${entry.name.substringAfter('/')}" }
+                    } else listOf(entry.name)
+                    for (name in names) {
+                        target.putNextEntry(ZipEntry(name))
+                        source.getInputStream(entry).use { it.copyTo(target) }
+                        target.closeEntry()
+                    }
+                }
+            }
+        }
+        return PbwApp(Path(archive.absolutePath))
     }
 
     private fun loadPbw(resourceName: String): Path {

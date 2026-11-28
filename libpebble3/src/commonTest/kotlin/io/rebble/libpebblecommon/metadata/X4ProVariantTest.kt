@@ -3,11 +3,18 @@ package io.rebble.libpebblecommon.metadata
 import io.rebble.libpebblecommon.connection.bt.ble.pebble.PebbleLeScanRecord.Companion.decodePebbleScanRecord
 import io.rebble.libpebblecommon.packets.WatchVersion.WatchVersionResponse
 import io.rebble.libpebblecommon.services.watchInfo
+import kotlin.test.BeforeTest
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class X4ProVariantTest {
+    private val tdeck = DeviceProfile(1, "LilyGO T-Deck Pro", "tdeck", 15, "tdeckpro")
+    private val previous = DeviceProfiles.current
+    @BeforeTest fun importProfile() { DeviceProfiles.load(tdeck.addedTo(previous)) }
+    @AfterTest fun restoreProfiles() { DeviceProfiles.load(previous) }
+
     @Test
     fun discoveryRequiresTheBoardRevisionAndMatchingTransport() {
         fun record(model: Byte, suffix: String) = (
@@ -15,7 +22,7 @@ class X4ProVariantTest {
                 byteArrayOf(model, 0, 4, 47, 0, 0) + suffix.encodeToByteArray()
             ).decodePebbleScanRecord().extendedInfo?.advertisedBoard
         assertEquals(WatchHardwarePlatform.XTEINK_X4_PRO, record(15, "x4pro"))
-        assertEquals(WatchHardwarePlatform.LILYGO_T_DECK_PRO, record(15, "tdeck"))
+        assertEquals(tdeck.hardware, record(15, "tdeck"))
         assertNull(record(14, "tdeck"))
         assertNull(record(15, ""))
         assertNull(record(15, "other"))
@@ -42,7 +49,7 @@ class X4ProVariantTest {
         for ((boardName, expected) in listOf(
             "asterix" to WatchHardwarePlatform.CORE_ASTERIX,
             "x4pro" to WatchHardwarePlatform.XTEINK_X4_PRO,
-            "tdeck" to WatchHardwarePlatform.LILYGO_T_DECK_PRO,
+            "tdeck" to tdeck.hardware,
         )) {
             response.board.set(boardName)
             val platform = response.watchInfo(WatchColor.Unknown).platform
@@ -52,6 +59,6 @@ class X4ProVariantTest {
         }
         assertEquals(WatchType.FLINT, WatchType.X4_PRO.getBestVariant(listOf("flint")))
         assertNull(WatchType.FLINT.getBestVariant(listOf("xteinkx4pro", "tdeckpro")))
-        assertNull(WatchType.T_DECK_PRO.getBestVariant(listOf("flint", "xteinkx4pro")))
+        assertNull(tdeck.type.getBestVariant(listOf("flint", "xteinkx4pro")))
     }
 }

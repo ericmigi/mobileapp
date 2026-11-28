@@ -1105,6 +1105,9 @@ fun StoreApplication.toLockerEntry(sourceUrl: String, timelineToken: String?): L
                 // The native SDK encodes a named extension platform with PROCESS_INFO_PLATFORM_OTHER.
                 app.asLockerEntryPlatform(native, fallbackFlags or (0xf shl 6))?.let { add(it) }
             }
+            app.hardwarePlatforms.orEmpty().filter { WatchType.fromCodename(it.name)?.profile != null }.forEach {
+                app.asLockerEntryPlatform(it.name, fallbackFlags or (0xf shl 6))?.let { platform -> add(platform) }
+            }
             app.compatibility.gabbro.takeIf { it?.supported ?: false }?.let {
                 val fallbackFlagsFinal = fallbackFlags or (0x6 shl 7)
                 app.asLockerEntryPlatform("gabbro", fallbackFlagsFinal)?.let { add(it) }

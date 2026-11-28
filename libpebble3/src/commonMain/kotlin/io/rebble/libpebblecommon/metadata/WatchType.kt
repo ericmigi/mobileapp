@@ -1,16 +1,18 @@
 package io.rebble.libpebblecommon.metadata
 
-public enum class WatchType(public val codename: String) {
-    APLITE("aplite"),
-    BASALT("basalt"),
-    CHALK("chalk"),
-    DIORITE("diorite"),
-    EMERY("emery"),
-    FLINT("flint"),
-    X4_PRO("xteinkx4pro"),
-    T_DECK_PRO("tdeckpro"),
-    GABBRO("gabbro"),
-    ;
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+
+@Serializable(with = WatchTypeSerializer::class)
+public data class WatchType internal constructor(public val codename: String) {
+    public val profile: DeviceProfile? get() = DeviceProfiles.current.firstOrNull { it.nativePlatform == codename }
+    public val name: String get() = if (this == X4_PRO) "X4_PRO" else codename.uppercase()
+    override fun toString(): String = name
 
     public fun getCompatibleAppVariants(): List<WatchType> {
         return when (this) {
@@ -24,10 +26,10 @@ public enum class WatchType(public val codename: String) {
                 DIORITE,
                 APLITE
             )
-            T_DECK_PRO -> listOf(T_DECK_PRO)
             X4_PRO -> listOf(X4_PRO, FLINT, DIORITE, APLITE)
             FLINT -> listOf(FLINT, DIORITE, APLITE)
             GABBRO -> listOf(GABBRO, CHALK)
+            else -> listOf(this) + profile?.compatiblePlatforms.orEmpty().mapNotNull { fromCodename(it) }
         }
     }
 
@@ -44,6 +46,17 @@ public enum class WatchType(public val codename: String) {
     }
 
     public companion object {
+        public val APLITE: WatchType = WatchType("aplite")
+        public val BASALT: WatchType = WatchType("basalt")
+        public val CHALK: WatchType = WatchType("chalk")
+        public val DIORITE: WatchType = WatchType("diorite")
+        public val EMERY: WatchType = WatchType("emery")
+        public val FLINT: WatchType = WatchType("flint")
+        public val X4_PRO: WatchType = WatchType("xteinkx4pro")
+        public val GABBRO: WatchType = WatchType("gabbro")
+        internal val standard: List<WatchType> = listOf(APLITE, BASALT, CHALK, DIORITE, EMERY, FLINT, X4_PRO, GABBRO)
+        public val entries: List<WatchType> get() = standard + DeviceProfiles.current.map { it.type }
+
         public fun fromCodename(codename: String): WatchType? {
             return entries.firstOrNull { it.codename == codename }
         }
@@ -51,21 +64,19 @@ public enum class WatchType(public val codename: String) {
 }
 
 internal fun WatchType.isColor(): Boolean = when (this) {
-    WatchType.APLITE -> false
-    WatchType.BASALT -> true
-    WatchType.CHALK -> true
-    WatchType.DIORITE -> false
-    WatchType.EMERY -> true
-    WatchType.FLINT, WatchType.X4_PRO, WatchType.T_DECK_PRO -> false
-    WatchType.GABBRO -> true
+    WatchType.BASALT, WatchType.CHALK, WatchType.EMERY, WatchType.GABBRO -> true
+    else -> false
 }
 
 internal fun WatchType.supportsBtClassic(): Boolean = when (this) {
-    WatchType.APLITE -> true
-    WatchType.BASALT -> true
-    WatchType.CHALK -> true
-    WatchType.DIORITE -> false
-    WatchType.EMERY -> false
-    WatchType.FLINT, WatchType.X4_PRO, WatchType.T_DECK_PRO -> false
-    WatchType.GABBRO -> false
+    WatchType.APLITE, WatchType.BASALT, WatchType.CHALK -> true
+    else -> false
+}
+internal object WatchTypeSerializer : KSerializer<WatchType> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("WatchType", PrimitiveKind.STRING)
+    override fun serialize(encoder: Encoder, value: WatchType) = encoder.encodeString(value.name)
+    override fun deserialize(decoder: Decoder): WatchType {
+        val name = decoder.decodeString()
+        return WatchType.standard.firstOrNull { it.name == name } ?: WatchType(name.lowercase())
+    }
 }

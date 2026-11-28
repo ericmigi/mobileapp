@@ -57,7 +57,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
 
 internal val WatchType.storeCodename: String
-    get() = if (this == WatchType.X4_PRO) WatchType.FLINT.codename else codename
+    get() = if (this == WatchType.X4_PRO) WatchType.FLINT.codename else profile?.storePlatform ?: codename
 
 class AppstoreService(
     private val platform: Platform,

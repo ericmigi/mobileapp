@@ -4,6 +4,8 @@ import androidx.annotation.VisibleForTesting
 import co.touchlab.kermit.Logger
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
+import io.rebble.libpebblecommon.metadata.DeviceProfile
+import io.rebble.libpebblecommon.metadata.DeviceProfiles
 import io.rebble.libpebblecommon.metadata.WatchType
 import io.rebble.libpebblecommon.packets.PhoneAppVersion
 import io.rebble.libpebblecommon.permissions.PermissionPolicy
@@ -39,10 +41,11 @@ internal class LibPebbleConfigHolder(
 
     fun update(value: LibPebbleConfig) {
         saveToStorage(value)
+        DeviceProfiles.load(value.watchConfig.deviceProfiles)
         _config.value = value
     }
 
-    private val _config: MutableStateFlow<LibPebbleConfig> = MutableStateFlow(defaultValue())
+    private val _config: MutableStateFlow<LibPebbleConfig> = MutableStateFlow(defaultValue().also { DeviceProfiles.load(it.watchConfig.deviceProfiles) })
     val config: StateFlow<LibPebbleConfig> = _config.asStateFlow()
 }
 
@@ -93,6 +96,7 @@ public data class WatchConfig(
     val enableLegacyPebbleKit: Boolean = true,
     val orderWatchfacesByLastUsed: Boolean = false,
     val unknownWatchTypePlatform: WatchType = WatchType.EMERY,
+    val deviceProfiles: List<DeviceProfile> = emptyList(),
     /**
      * When true, BLE scan results include legacy classic-supporting Pebbles
      * (Aplite/Basalt/Chalk). By default these are hidden so users go through the dedicated

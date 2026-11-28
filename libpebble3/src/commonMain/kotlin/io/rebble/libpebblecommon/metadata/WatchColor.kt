@@ -1,6 +1,6 @@
 package io.rebble.libpebblecommon.metadata
 
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.CORE_GETAFIX_EVT
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.CORE_GETAFIX_EVT
 
 private const val Silver = 0xFFC4C6C8
 private const val Gunmetal = 0xFF55585C
@@ -83,7 +83,7 @@ public fun WatchColor.supportsHrm(): Boolean = when (this) {
 /** The board is available after the version exchange; an advertisement may supply only a color. */
 public fun WatchColor?.modelDescription(hardware: WatchHardwarePlatform?): String? =
     when {
-        hardware == WatchHardwarePlatform.LILYGO_T_DECK_PRO -> "LilyGO T-Deck Pro"
+        hardware?.watchType?.profile != null -> hardware.watchType.profile?.displayName
         hardware == WatchHardwarePlatform.XTEINK_X4_PRO -> "Xteink X4 Pro"
         this == null || this == WatchColor.Unknown -> null
         else -> uiDescription

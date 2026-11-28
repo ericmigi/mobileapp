@@ -170,6 +170,7 @@ import coreapp.pebble.generated.resources.watches_limited_background_access
 import coreapp.pebble.generated.resources.watches_more_options
 import coreapp.pebble.generated.resources.watches_need_more_help
 import coreapp.pebble.generated.resources.watches_no_watches_found
+import coreapp.pebble.generated.resources.watches_import_profile
 import coreapp.pebble.generated.resources.watches_open_bt_settings
 import coreapp.pebble.generated.resources.watches_other_apps_installed
 import coreapp.pebble.generated.resources.watches_press_index_button
@@ -327,6 +328,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import io.rebble.libpebblecommon.metadata.DeviceProfile
+import rememberOpenDocumentLauncher
+import kotlinx.io.readString
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -356,6 +360,23 @@ sealed interface ScanningStatus {
 @Composable
 fun WatchesScreen(navBarNav: NavBarNav, topBarParams: TopBarParams) {
     val libPebble = rememberLibPebble()
+    val importProfile = rememberOpenDocumentLauncher { documents ->
+        val file = documents?.firstOrNull() ?: return@rememberOpenDocumentLauncher
+        try {
+            val profile = file.source.use {
+                require(!it.request(16385)) { "Profile exceeds 16 KiB" }
+                DeviceProfile.parse(it.readString())
+            }
+            val config = libPebble.config.value
+            val profiles = profile.addedTo(config.watchConfig.deviceProfiles)
+            libPebble.updateConfig(config.copy(watchConfig = config.watchConfig.copy(deviceProfiles = profiles)))
+            topBarParams.showSnackbar("Imported ${profile.displayName}")
+        } catch (e: Exception) {
+            topBarParams.showSnackbar("Could not import profile: ${e.message.orEmpty()}")
+        } finally {
+            documents?.drop(1)?.forEach { it.source.close() }
+        }
+    }
     val libIndex = koinInject<LibIndex>()
     val pebbleFeatures = koinInject<PebbleFeatures>()
     val scanningStatus by combine(
@@ -549,7 +570,11 @@ fun WatchesScreen(navBarNav: NavBarNav, topBarParams: TopBarParams) {
             LaunchedEffect(Unit) {
                 topBarParams.searchAvailable(null)
                 topBarParams.title(title)
-                topBarParams.actions {}
+                topBarParams.actions {
+                    TextButton(onClick = { importProfile(listOf("application/json", "text/plain")) }) {
+                        Text(stringResource(Res.string.watches_import_profile))
+                    }
+                }
                 launch {
                     topBarParams.scrollToTop.collect {
                         listState.animateScrollToItem(0)

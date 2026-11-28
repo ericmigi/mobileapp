@@ -862,7 +862,7 @@ fun LockerAppScreen(topBarParams: TopBarParams, uuid: Uuid?, navBarNav: NavBarNa
                     commonAppStore?.storeApp?.batteryImpact?.takeIf { it.isNotEmpty() }?.let { impacts ->
                         val watchType = sharedViewModel.watchType.value
                         val connected = watchType.codename
-                        val platform = if (watchType == WatchType.X4_PRO) {
+                        val platform = if (watchType == WatchType.X4_PRO || watchType.profile != null) {
                             watchType.getBestVariant(impacts.keys.toList())?.codename ?: impacts.keys.first()
                         } else if (connected in impacts) connected else impacts.keys.first()
                         var showDetails by remember { mutableStateOf(false) }

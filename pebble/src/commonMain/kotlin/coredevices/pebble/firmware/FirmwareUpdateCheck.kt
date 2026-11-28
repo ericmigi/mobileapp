@@ -7,30 +7,30 @@ import coredevices.pebble.services.Memfault
 import coredevices.util.CoreConfigFlow
 import io.rebble.libpebblecommon.connection.FirmwareUpdateCheckResult
 import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_BOBBY_SMILES
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_BIGBOARD
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_BIGBOARD_2
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_EV_1
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_EV_2
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_EV_2_3
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_EV_2_4
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ONE_POINT_FIVE
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ROBERT_BIGBOARD
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ROBERT_BIGBOARD_2
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_ROBERT_EVT
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SILK
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SILK_BIGBOARD
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SILK_BIGBOARD_2_PLUS
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SILK_EVT
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SNOWY_BIGBOARD
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SNOWY_BIGBOARD_2
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SNOWY_DVT
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SNOWY_EVT_2
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SPALDING_BIGBOARD
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SPALDING_EVT
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_SPALDING_PVT
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.PEBBLE_TWO_POINT_ZERO
-import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.UNKNOWN
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_BOBBY_SMILES
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_BIGBOARD
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_BIGBOARD_2
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_EV_1
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_EV_2
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_EV_2_3
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_EV_2_4
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ONE_POINT_FIVE
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ROBERT_BIGBOARD
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ROBERT_BIGBOARD_2
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_ROBERT_EVT
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SILK
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SILK_BIGBOARD
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SILK_BIGBOARD_2_PLUS
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SILK_EVT
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SNOWY_BIGBOARD
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SNOWY_BIGBOARD_2
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SNOWY_DVT
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SNOWY_EVT_2
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SPALDING_BIGBOARD
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SPALDING_EVT
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_SPALDING_PVT
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.PEBBLE_TWO_POINT_ZERO
+import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform.Companion.UNKNOWN
 import io.rebble.libpebblecommon.services.WatchInfo
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -99,6 +99,7 @@ class FirmwareUpdateCheck(
     }
 
     private suspend fun doCheck(watch: WatchInfo): FirmwareUpdateCheckResult = when {
+        watch.platform.watchType.profile != null -> FirmwareUpdateCheckResult.FoundNoUpdate
         watch.platform == UNKNOWN -> FirmwareUpdateCheckResult.UpdateCheckFailed(getString(Res.string.firmware_check_unknown_platform))
         watch.platform.isCoreDevice() -> engDashOta.getLatestFirmware(watch)
         else -> cohorts.getLatestFirmware(watch)

@@ -256,9 +256,9 @@ internal fun WatchHardwarePlatform?.advertisesWhenNotConnected(): Boolean = when
     WatchType.CHALK -> true
     WatchType.DIORITE -> true
     WatchType.EMERY -> false
-    WatchType.FLINT, WatchType.X4_PRO, WatchType.T_DECK_PRO -> false
+    WatchType.FLINT, WatchType.X4_PRO -> false
     WatchType.GABBRO -> false
-    null -> false
+    else -> false
 }
 
 internal expect val SERVER_META_RESPONSE: ByteArray

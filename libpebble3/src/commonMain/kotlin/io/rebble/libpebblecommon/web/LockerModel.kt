@@ -104,7 +104,6 @@ public data class LockerEntryCompatibility internal constructor(
     val flint: LockerEntryCompatibilityWatchPlatformDetails? = null,
     val gabbro: LockerEntryCompatibilityWatchPlatformDetails? = null,
     val xteinkx4pro: LockerEntryCompatibilityWatchPlatformDetails? = null,
-    val tdeckpro: LockerEntryCompatibilityWatchPlatformDetails? = null,
 )
 
 @Serializable

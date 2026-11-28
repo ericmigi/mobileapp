@@ -13,7 +13,7 @@ import io.rebble.libpebblecommon.metadata.WatchColor.Pebble2DuoWhite
 import io.rebble.libpebblecommon.metadata.WatchColor.TimeRoundBlackGoldPolish20
 import io.rebble.libpebblecommon.metadata.WatchColor.TimeRoundBlackSilverPolish20
 import io.rebble.libpebblecommon.metadata.WatchHardwarePlatform
-import io.rebble.libpebblecommon.metadata.WatchType.CHALK
+import io.rebble.libpebblecommon.metadata.WatchType.Companion.CHALK
 import io.rebble.libpebblecommon.packets.FirmwareProperty
 import io.rebble.libpebblecommon.packets.PhoneAppVersion
 import io.rebble.libpebblecommon.packets.PingPong
