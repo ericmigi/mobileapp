@@ -392,6 +392,7 @@ fun WatchType.modelDescription() = when (this) {
     WatchType.CHALK -> "Pebble Time Round"
     WatchType.DIORITE -> "Pebble 2"
     WatchType.EMERY -> "Pebble Time 2"
+    WatchType.T_DECK_PRO -> "LilyGO T-Deck Pro"
     WatchType.X4_PRO -> "Xteink X4 Pro"
     WatchType.FLINT -> "Pebble 2 Duo"
     WatchType.GABBRO -> "Pebble Round 2"
@@ -572,6 +573,7 @@ fun WatchType.shortName(): String = when (this) {
     WatchType.BASALT -> "PT"
     WatchType.CHALK -> "PTR"
     WatchType.DIORITE -> "P2"
+    WatchType.T_DECK_PRO -> "T-Deck Pro"
     WatchType.X4_PRO -> "X4 Pro"
     WatchType.FLINT -> "P2D"
     WatchType.EMERY -> "PT2"
@@ -1170,6 +1172,7 @@ fun LockerEntryCompatibility.isCompatible(
         if (diorite.supported) add(WatchType.DIORITE)
         if (emery.supported) add(WatchType.EMERY)
         if (flint?.supported == true) add(WatchType.FLINT)
+        if (tdeckpro?.supported ?: (WatchType.T_DECK_PRO.codename in binaryPlatforms)) add(WatchType.T_DECK_PRO)
         if (xteinkx4pro?.supported ?: (WatchType.X4_PRO.codename in binaryPlatforms)) add(WatchType.X4_PRO)
         if (gabbro?.supported == true) add(WatchType.GABBRO)
     }
@@ -1183,6 +1186,7 @@ fun LockerEntryCompatibility.findPlatform(watchType: WatchType): LockerEntryComp
         WatchType.CHALK -> chalk
         WatchType.DIORITE -> diorite
         WatchType.EMERY -> emery
+        WatchType.T_DECK_PRO -> tdeckpro
         WatchType.X4_PRO -> xteinkx4pro
         WatchType.FLINT -> flint
         WatchType.GABBRO -> gabbro

@@ -15,6 +15,8 @@ class X4ProVariantTest {
                 byteArrayOf(model, 0, 4, 47, 0, 0) + suffix.encodeToByteArray()
             ).decodePebbleScanRecord().extendedInfo?.advertisedBoard
         assertEquals(WatchHardwarePlatform.XTEINK_X4_PRO, record(15, "x4pro"))
+        assertEquals(WatchHardwarePlatform.LILYGO_T_DECK_PRO, record(15, "tdeck"))
+        assertNull(record(14, "tdeck"))
         assertNull(record(15, ""))
         assertNull(record(15, "other"))
         assertNull(record(14, "x4pro"))
@@ -36,10 +38,11 @@ class X4ProVariantTest {
             btAddress.set(UByteArray(6))
             capabilities.set(UByteArray(8))
         }
-        val targets = listOf("flint", "xteinkx4pro")
+        val targets = listOf("flint", "xteinkx4pro", "tdeckpro")
         for ((boardName, expected) in listOf(
             "asterix" to WatchHardwarePlatform.CORE_ASTERIX,
             "x4pro" to WatchHardwarePlatform.XTEINK_X4_PRO,
+            "tdeck" to WatchHardwarePlatform.LILYGO_T_DECK_PRO,
         )) {
             response.board.set(boardName)
             val platform = response.watchInfo(WatchColor.Unknown).platform
@@ -48,6 +51,7 @@ class X4ProVariantTest {
             assertEquals(expected.watchType, platform.watchType.getBestVariant(targets))
         }
         assertEquals(WatchType.FLINT, WatchType.X4_PRO.getBestVariant(listOf("flint")))
-        assertNull(WatchType.FLINT.getBestVariant(listOf("xteinkx4pro")))
+        assertNull(WatchType.FLINT.getBestVariant(listOf("xteinkx4pro", "tdeckpro")))
+        assertNull(WatchType.T_DECK_PRO.getBestVariant(listOf("flint", "xteinkx4pro")))
     }
 }

@@ -83,6 +83,7 @@ public fun WatchColor.supportsHrm(): Boolean = when (this) {
 /** The board is available after the version exchange; an advertisement may supply only a color. */
 public fun WatchColor?.modelDescription(hardware: WatchHardwarePlatform?): String? =
     when {
+        hardware == WatchHardwarePlatform.LILYGO_T_DECK_PRO -> "LilyGO T-Deck Pro"
         hardware == WatchHardwarePlatform.XTEINK_X4_PRO -> "Xteink X4 Pro"
         this == null || this == WatchColor.Unknown -> null
         else -> uiDescription

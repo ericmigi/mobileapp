@@ -8,6 +8,7 @@ public enum class WatchType(public val codename: String) {
     EMERY("emery"),
     FLINT("flint"),
     X4_PRO("xteinkx4pro"),
+    T_DECK_PRO("tdeckpro"),
     GABBRO("gabbro"),
     ;
 
@@ -23,6 +24,7 @@ public enum class WatchType(public val codename: String) {
                 DIORITE,
                 APLITE
             )
+            T_DECK_PRO -> listOf(T_DECK_PRO)
             X4_PRO -> listOf(X4_PRO, FLINT, DIORITE, APLITE)
             FLINT -> listOf(FLINT, DIORITE, APLITE)
             GABBRO -> listOf(GABBRO, CHALK)
@@ -54,7 +56,7 @@ internal fun WatchType.isColor(): Boolean = when (this) {
     WatchType.CHALK -> true
     WatchType.DIORITE -> false
     WatchType.EMERY -> true
-    WatchType.FLINT, WatchType.X4_PRO -> false
+    WatchType.FLINT, WatchType.X4_PRO, WatchType.T_DECK_PRO -> false
     WatchType.GABBRO -> true
 }
 
@@ -64,6 +66,6 @@ internal fun WatchType.supportsBtClassic(): Boolean = when (this) {
     WatchType.CHALK -> true
     WatchType.DIORITE -> false
     WatchType.EMERY -> false
-    WatchType.FLINT, WatchType.X4_PRO -> false
+    WatchType.FLINT, WatchType.X4_PRO, WatchType.T_DECK_PRO -> false
     WatchType.GABBRO -> false
 }

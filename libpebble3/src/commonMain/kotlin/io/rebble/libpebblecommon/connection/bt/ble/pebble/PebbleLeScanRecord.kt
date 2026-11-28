@@ -23,7 +23,6 @@ public data class PebbleLeScanRecord internal constructor(
         private fun ByteArray.decodeExtendedInfo(): ExtendedPebbleScanRecord {
             val hardware = this[SERIAL_END].toUByte().toInt()
             val flags = this[SERIAL_END + 5].toInt()
-            val pro = WatchHardwarePlatform.XTEINK_X4_PRO
             return ExtendedPebbleScanRecord(
                 hardwarePlatform = hardware,
                 color = this[SERIAL_END + 1],
@@ -32,9 +31,9 @@ public data class PebbleLeScanRecord internal constructor(
                 patch = this[SERIAL_END + 4].toUByte().toInt(),
                 runningPrf = flags and 1 != 0,
                 firstUse = flags and 2 != 0,
-                advertisedBoard = if (hardware == pro.protocolNumber.toInt() &&
-                    decodeToString(EXTENDED_END, size) == pro.revision
-                ) pro else null,
+                advertisedBoard = WatchHardwarePlatform.fromBoardMarker(
+                    hardware.toUByte(), decodeToString(EXTENDED_END, size),
+                ),
             )
         }
     }

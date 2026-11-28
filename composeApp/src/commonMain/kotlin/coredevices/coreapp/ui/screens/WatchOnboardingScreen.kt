@@ -558,6 +558,7 @@ fun StoreOnboarding.forType(watchType: WatchType): List<String>? = when (watchTy
     WatchType.CHALK -> chalk
     WatchType.DIORITE -> diorite
     WatchType.EMERY -> emery
+    WatchType.T_DECK_PRO -> null
     WatchType.X4_PRO -> xteinkx4pro.ifEmpty { flint }
     WatchType.FLINT -> flint
     WatchType.GABBRO -> gabbro

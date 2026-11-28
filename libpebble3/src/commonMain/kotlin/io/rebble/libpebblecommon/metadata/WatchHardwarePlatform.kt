@@ -37,6 +37,7 @@ public enum class WatchHardwarePlatform(public val protocolNumber: UByte, privat
     CORE_ASTERIX(15u, WatchType.FLINT, "asterix"),
     // The Pro advertises the Flint transport profile and identifies itself in the board field.
     XTEINK_X4_PRO(15u, WatchType.X4_PRO, "x4pro"),
+    LILYGO_T_DECK_PRO(15u, WatchType.T_DECK_PRO, "tdeck"),
     CORE_OBELIX_EVT(16u, WatchType.EMERY, "obelix_evt"),
     CORE_OBELIX_DVT(17u, WatchType.EMERY, "obelix_dvt"),
     CORE_OBELIX_PVT(18u, WatchType.EMERY, "obelix_pvt"),
@@ -69,6 +70,12 @@ public enum class WatchHardwarePlatform(public val protocolNumber: UByte, privat
                 Logger.d { "unknown hardware revision: $number" }
             }
         }
+
+        internal fun fromBoardMarker(number: UByte, marker: String): WatchHardwarePlatform? =
+            entries.firstOrNull {
+                it.protocolNumber == number && it.revision == marker &&
+                    (it == XTEINK_X4_PRO || it == LILYGO_T_DECK_PRO)
+            }
 
         internal fun fromHWRevision(revision: String?): WatchHardwarePlatform {
             if (revision == "unk") return UNKNOWN

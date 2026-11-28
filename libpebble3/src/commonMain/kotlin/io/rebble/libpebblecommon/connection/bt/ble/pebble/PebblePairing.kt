@@ -174,6 +174,6 @@ internal fun WatchType.needsPairingTrigger(): Boolean = when (this) {
     WatchType.CHALK -> false
     WatchType.DIORITE -> true
     WatchType.EMERY -> true
-    WatchType.FLINT, WatchType.X4_PRO -> true
+    WatchType.FLINT, WatchType.X4_PRO, WatchType.T_DECK_PRO -> true
     WatchType.GABBRO -> true
 }
